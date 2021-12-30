@@ -28,7 +28,12 @@ find.file(regex, source, async (files: string[]) => {
     if (fs.existsSync(webmPath)) {
       console.log('Skipping webm', f);
     } else {
-      const sh = execa('ffmpeg', ['-i', f, '-crf', '0', webmPath])
+      const params = [];
+      if (process.env.DURATION) {
+        params.push('-t');
+        params.push(process.env.DURATION);
+      }
+      const sh = execa('ffmpeg', ['-i', f].concat(params).concat(['-crf', '0', webmPath]));
       sh.stdout?.pipe(process.stdout)
       sh.stderr?.pipe(process.stderr);
       await sh
