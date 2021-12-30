@@ -65,7 +65,9 @@ function App() {
   });
 
   const videoEnded = () => {
-    setVideoURL('');
+    setTimeout(() => {
+      setVideoURL('');
+    }, 200);
   }
 
   return (
@@ -81,7 +83,7 @@ function App() {
           ))}
         </ul>
       </div>)}
-      {videoURL && <ReactPlayer url={videoURL} controls={true} onEnded={videoEnded} />}
+      {videoURL && <ReactPlayer url={videoURL} controls={true} onEnded={videoEnded} playing={true} />}
     </div>
   );
 }
