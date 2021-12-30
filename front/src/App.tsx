@@ -17,6 +17,12 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [requestedLock, setRequestedLock] = useState(false);
+  useEffect(() => {
+    if (requestedLock) return
+    setRequestedLock(true)
+    document.body.addEventListener('click', () => document.body.requestPointerLock());
+  }, [requestedLock]);
   useEffect(() => {
     if (loading || loadedVideos) return;
     (async () => {
