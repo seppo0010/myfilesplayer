@@ -17,6 +17,7 @@ interface Video {
 
 function App() {
   const videoRef = useRef<null | ReactPlayer>(null);
+  const [playing, setPlaying] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -69,7 +70,7 @@ function App() {
 
   const onVideoEnded = () => {
     setTimeout(() => {
-      // setVideoURL('');
+      setVideoURL('');
     }, 200);
   }
 
@@ -81,6 +82,10 @@ function App() {
     if (videoRef) {
       videoRef.current?.seekTo(e.target.value / 10000, 'fraction');
     }
+  }
+
+  const playPauseOnClick = () => {
+    setPlaying(!playing);
   }
 
   return (
@@ -109,7 +114,24 @@ function App() {
         width: '100%',
         height: '100%',
       }}>
-        <ReactPlayer url={videoURL} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={true} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} />
+        <ReactPlayer url={videoURL} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={playing} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} />
+        <div style={{
+          position: 'fixed',
+          bottom: 10,
+          left: '2%',
+          color: 'white',
+          fontWeight: 'bold',
+          textAlign: 'left',
+        }}>
+          <button style={{
+            cursor: 'pointer',
+            background: 'none',
+            border: 'none',
+            padding: '0',
+            margin: '0',
+            fontSize: 20,
+          }} onClick={playPauseOnClick}>⏯</button>
+        </div>
         <input type="range" max="10000" value={videoProgress * 10000} style={{
           position: 'fixed',
           bottom: 10,
