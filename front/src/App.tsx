@@ -18,11 +18,28 @@ function App() {
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
   const [requestedLock, setRequestedLock] = useState(false);
+  const [selected, setSelected] = useState(0);
   useEffect(() => {
     if (requestedLock) return
     setRequestedLock(true)
     document.body.addEventListener('click', () => document.body.requestPointerLock());
   }, [requestedLock]);
+  useEffect(() => {
+    if (!videos.length) return
+    let lastSelected = 0;
+    // FIXME: videos cannot change after initial load
+    document.addEventListener('mousemove', (e) => {
+        if (!videos.length || e.movementY === 0) return;
+        lastSelected = Math.min(
+          Math.max(
+            0,
+            lastSelected + (e.movementY > 0 ? 1 : -1)
+          ),
+          videos.length - 1
+        );
+        setSelected(lastSelected);
+    });
+  }, [videos]);
   useEffect(() => {
     if (loading || loadedVideos) return;
     (async () => {
@@ -40,8 +57,8 @@ function App() {
       {loadedVideos && (<div>
         <h1>Videos</h1>
         <ul>
-          {videos.map((v) => (
-            <li key={v.filename}>
+          {videos.map((v, i) => (
+            <li key={v.filename} style={i === selected ? {color: 'red'} : {}}>
               {v.filename}
             </li>
           ))}
