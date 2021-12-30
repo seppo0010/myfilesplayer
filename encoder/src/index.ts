@@ -22,17 +22,30 @@ const OpenSubtitles = new OS({
 (async function () {
   find.file(regex, source, (files) => {
     files.forEach(async (f) => {
-      const webmPath = path.join(target, path.basename(f.replace(regex, '.webm')));
-      const jsonPath = path.join(target, path.basename(f.replace(regex, '.json')));
-      if (fs.existsSync(webmPath) && fs.existsSync(jsonPath)) {
-        console.log('Skipping', f);
-        return;
-      }
       console.log('Processing', f);
-      const episode = episodeParser(path.basename(f));
-      const opensubtitles = await OpenSubtitles.hash(f);
-      child_process.spawnSync('ffmpeg', ['-i', f, '-crf', '0', webmPath], { stdio: 'pipe' })
-      fs.writeFileSync(jsonPath, JSON.stringify({ opensubtitles, episode }));
+
+      const webmPath = path.join(target, path.basename(f.replace(regex, '.webm')));
+      if (fs.existsSync(webmPath)) {
+        console.log('Skipping webm', f);
+      } else {
+        child_process.spawnSync('ffmpeg', ['-i', f, '-crf', '0', webmPath], { stdio: 'pipe' });
+      }
+
+      const thumbnailPath = path.join(target, path.basename(f.replace(regex, '.jpg')));
+      if (fs.existsSync(thumbnailPath)) {
+        console.log('Skipping thumbnail', f);
+      } else {
+        child_process.spawnSync('ffmpeg', ['-ss', '200', '-i', f, '-vframes', '1', '-q:v', '2', '-s', '400x200', thumbnailPath], { stdio: 'pipe' });
+      }
+
+      if (fs.existsSync(jsonPath)) {
+        console.log('Skipping json', f);
+      } else {
+        const jsonPath = path.join(target, path.basename(f.replace(regex, '.json')));
+        const episode = episodeParser(path.basename(f));
+        const opensubtitles = await OpenSubtitles.hash(f);
+        fs.writeFileSync(jsonPath, JSON.stringify({ opensubtitles, episode }));
+      }
     })
   });
 })();
