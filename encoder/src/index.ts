@@ -52,8 +52,9 @@ find.file(regex, source, async (files: string[]) => {
     } else {
       const episode = episodeParser(path.basename(f));
       const opensubtitles = await OpenSubtitles.hash(f);
+      const basename = path.basename(f);
       fs.writeFileSync(jsonPath, JSON.stringify({
-        filename: path.basename(f),
+        filename: basename.substr(0, basename.length - 4),
         opensubtitles,
         episode,
       }));

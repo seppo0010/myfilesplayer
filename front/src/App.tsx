@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ReactPlayer from 'react-player'
 
 interface Video {
   filename: string
@@ -18,14 +19,24 @@ function App() {
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
   const [selected, setSelected] = useState(0);
-  useEffect(() => {
-    const click = () => document.body.requestPointerLock();
-    document.body.addEventListener('click', click);
-    return () =>  document.body.removeEventListener('click', click);
-  }, []);
+  const [videoURL, setVideoURL] = useState('');
 
   useEffect(() => {
-    if (!videos.length) return
+    if (videoURL !== '') return;
+    const click = () => {
+      if (!document.pointerLockElement) {
+        document.body.requestPointerLock();
+      } else {
+        setVideoURL(`/videos/${videos[selected].filename}.webm`);
+        document.exitPointerLock();
+      }
+    }
+    document.body.addEventListener('click', click);
+    return () =>  document.body.removeEventListener('click', click);
+  }, [videos, selected, videoURL]);
+
+  useEffect(() => {
+    if (!videos.length || videoURL !== '') return
     let lastSelected = 0;
     const mousemove = (e: MouseEvent) => {
         if (!videos.length || e.movementY === 0) return;
@@ -40,7 +51,7 @@ function App() {
     };
     document.addEventListener('mousemove', mousemove);
     return () => document.removeEventListener('mousemove', mousemove)
-  }, [videos]);
+  }, [videos, videoURL]);
 
   useEffect(() => {
     if (loading || loadedVideos) return;
@@ -52,6 +63,10 @@ function App() {
         setLoading(false);
     })();
   });
+
+  const videoEnded = () => {
+    setVideoURL('');
+  }
 
   return (
     <div>
@@ -66,6 +81,7 @@ function App() {
           ))}
         </ul>
       </div>)}
+      {videoURL && <ReactPlayer url={videoURL} controls={true} onEnded={videoEnded} />}
     </div>
   );
 }
