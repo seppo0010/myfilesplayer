@@ -130,7 +130,7 @@ function App() {
             padding: '0',
             margin: '0',
             fontSize: 20,
-          }} onClick={playPauseOnClick}>⏯</button>
+          }} onClick={playPauseOnClick}>{!playing ? '▶️' : '⏸'}</button>
         </div>
         <input type="range" max="10000" value={videoProgress * 10000} style={{
           position: 'fixed',
