@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import ReactPlayer from 'react-player'
+import React, { useEffect, useState, useRef } from 'react';
+import ReactPlayer from 'react-player';
+import formatDuration from 'format-duration';
 
 interface Video {
   filename: string
@@ -15,11 +16,13 @@ interface Video {
 }
 
 function App() {
+  const videoRef = useRef<null | ReactPlayer>(null);
   const [loading, setLoading] = useState(false);
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
   const [selected, setSelected] = useState(0);
   const [videoURL, setVideoURL] = useState('');
+  const [videoProgress, setVideoProgress] = useState(0.0);
 
   useEffect(() => {
     if (videoURL !== '') return;
@@ -64,10 +67,20 @@ function App() {
     })();
   });
 
-  const videoEnded = () => {
+  const onVideoEnded = () => {
     setTimeout(() => {
-      setVideoURL('');
+      // setVideoURL('');
     }, 200);
+  }
+
+  const onProgress = (v: { played: number }) => {
+    setVideoProgress(v.played);
+  }
+
+  const onChangeProgress = (e: any) => {
+    if (videoRef) {
+      videoRef.current?.seekTo(e.target.value / 10000, 'fraction');
+    }
   }
 
   return (
@@ -96,7 +109,21 @@ function App() {
         width: '100%',
         height: '100%',
       }}>
-        <ReactPlayer url={videoURL} controls={true} onEnded={videoEnded} playing={true} style={{ background: 'black' }} width="100%" height="100%" />
+        <ReactPlayer url={videoURL} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={true} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} />
+        <input type="range" max="10000" value={videoProgress * 10000} style={{
+          position: 'fixed',
+          bottom: 10,
+          width: '80%',
+          left: '10%',
+        }} onChange={onChangeProgress} />
+        <div style={{
+          position: 'fixed',
+          bottom: 14,
+          right: '2%',
+          color: 'white',
+          fontWeight: 'bold',
+          textAlign: 'right',
+        }}>{formatDuration(videoProgress * (videoRef.current?.getDuration() || 0) * 1000)}</div>
       </div>)}
     </div>
   );
