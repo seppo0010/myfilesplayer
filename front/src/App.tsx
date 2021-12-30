@@ -68,6 +68,45 @@ function App() {
     })();
   });
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      switch(e.keyCode) {
+        case 13: // enter
+          setVideoURL(`/videos/${videos[selected].filename}.webm`);
+          document.exitPointerLock();
+          break;
+        case 38: // up arrow
+        case 40: // down arrow
+          setSelected(Math.min(
+            Math.max(
+              0,
+              selected + e.keyCode - 39
+            ),
+            videos.length - 1
+          ));
+          break;
+        case 27: // esc
+          setVideoURL('');
+          break;
+        case 19: // pause
+        case 32: // space bar
+        case 415: // play
+          setPlaying(!playing);
+          break;
+        case 412: // seek backward
+        case 37: // left arrow
+          videoRef.current?.seekTo(videoRef.current?.getCurrentTime() - 15, 'seconds');
+          break;
+        case 417: // seek forward
+        case 39: // right arrow
+          videoRef.current?.seekTo(videoRef.current?.getCurrentTime() + 15, 'seconds');
+          break;
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [selected, playing, videoRef]);
+
   const onVideoEnded = () => {
     setTimeout(() => {
       setVideoURL('');
