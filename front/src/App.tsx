@@ -154,37 +154,45 @@ function App() {
         height: '100%',
       }}>
         <ReactPlayer url={videoURL} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={playing} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} />
-        <div style={{
+        {!playing && <div style={{
           position: 'fixed',
           bottom: 10,
-          left: '2%',
           color: 'white',
           fontWeight: 'bold',
           textAlign: 'left',
         }}>
-          <button style={{
-            cursor: 'pointer',
-            background: 'none',
-            border: 'none',
-            padding: '0',
-            margin: '0',
-            fontSize: 20,
-          }} onClick={playPauseOnClick}>{!playing ? '▶️' : '⏸'}</button>
-        </div>
-        <input type="range" max="10000" value={videoProgress * 10000} style={{
-          position: 'fixed',
-          bottom: 10,
-          width: '80%',
-          left: '10%',
-        }} onChange={onChangeProgress} />
-        <div style={{
-          position: 'fixed',
-          bottom: 14,
-          right: '2%',
-          color: 'white',
-          fontWeight: 'bold',
-          textAlign: 'right',
-        }}>{formatDuration(videoProgress * (videoRef.current?.getDuration() || 0) * 1000)}</div>
+          <div style={{
+            position: 'fixed',
+            bottom: 10,
+            left: '2%',
+            color: 'white',
+            fontWeight: 'bold',
+            textAlign: 'left',
+          }}>
+            <button style={{
+              cursor: 'pointer',
+              background: 'none',
+              border: 'none',
+              padding: '0',
+              margin: '0',
+              fontSize: 20,
+            }} onClick={playPauseOnClick}>{!playing ? '▶️' : '⏸'}</button>
+          </div>
+          <input type="range" max="10000" value={videoProgress * 10000} style={{
+            position: 'fixed',
+            bottom: 10,
+            width: '80%',
+            left: '10%',
+          }} onChange={onChangeProgress} />
+          <div style={{
+            position: 'fixed',
+            bottom: 14,
+            right: '2%',
+            color: 'white',
+            fontWeight: 'bold',
+            textAlign: 'right',
+          }}>{formatDuration(videoProgress * (videoRef.current?.getDuration() || 0) * 1000)}</div>
+        </div>}
       </div>)}
     </div>
   );
