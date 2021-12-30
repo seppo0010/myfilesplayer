@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import * as dotenv from 'dotenv';
 import OS from 'opensubtitles.com';
 import fetch from 'node-fetch';
@@ -18,7 +18,7 @@ os.login({
   password: process.env.OS_PASSWORD,
 });
 
-app.get('/api/videos.json', async (req, res) => {
+app.get('/api/videos.json', async (req: Request, res: Response) => {
   const files = Array.prototype.slice.call(await Promise.all(
     Array.prototype.slice.call(await fs.promises
                                            .readdir(videosPath))
@@ -30,7 +30,7 @@ app.get('/api/videos.json', async (req, res) => {
   res.json(files);
 })
 app.use('/videos', express.static(videosPath));
-app.get('/api/subtitles/:video', async (req, res) => {
+app.get('/api/subtitles/:video', async (req: Request, res: Response) => {
   const fileData = JSON.parse(await fs.promises.readFile(path.join(
     videosPath,
     `${req.params.video}.json`
@@ -42,7 +42,7 @@ app.get('/api/subtitles/:video', async (req, res) => {
   })
   res.json(data);
 });
-app.get('/api/subtitle/:file_id', async (req, res) => {
+app.get('/api/subtitle/:file_id', async (req: Request, res: Response) => {
   const data = await os.download({
     file_id: req.params.file_id,
   });
