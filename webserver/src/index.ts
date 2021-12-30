@@ -19,10 +19,12 @@ os.login({
 });
 
 app.get('/videos.json', async (req, res) => {
-  const files = Array.prototype.slice.call(await fs.promises
+  const files = Array.prototype.slice.call(await Promise.all(
+    Array.prototype.slice.call(await fs.promises
                                            .readdir(videosPath))
     .filter((f) => f.endsWith('.json'))
-    .map((f) => f.substr(0, f.length-5));
+    .map((f) => fs.promises.readFile(path.join(videosPath, f)))
+  )).map((f) => JSON.parse(f));
   files.sort();
   res.type('application/json');
   res.json(files);
