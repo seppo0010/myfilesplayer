@@ -52,7 +52,11 @@ find.file(regex, source, async (files: string[]) => {
     } else {
       const episode = episodeParser(path.basename(f));
       const opensubtitles = await OpenSubtitles.hash(f);
-      fs.writeFileSync(jsonPath, JSON.stringify({ opensubtitles, episode }));
+      fs.writeFileSync(jsonPath, JSON.stringify({
+        filename: path.basename(f),
+        opensubtitles,
+        episode,
+      }));
     }
   }
 });
