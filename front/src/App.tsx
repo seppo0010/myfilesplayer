@@ -37,7 +37,7 @@ function App() {
 
   useEffect(() => {
     if (!videos.length || videoURL !== '') return
-    let lastSelected = 0;
+    let lastSelected = selected;
     const mousemove = (e: MouseEvent) => {
         if (!videos.length || e.movementY === 0) return;
         lastSelected = Math.min(
@@ -51,7 +51,7 @@ function App() {
     };
     document.addEventListener('mousemove', mousemove);
     return () => document.removeEventListener('mousemove', mousemove)
-  }, [videos, videoURL]);
+  }, [videos, videoURL, selected]);
 
   useEffect(() => {
     if (loading || loadedVideos) return;
