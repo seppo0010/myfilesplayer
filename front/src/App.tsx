@@ -17,18 +17,17 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [requestedLock, setRequestedLock] = useState(false);
   const [selected, setSelected] = useState(0);
   useEffect(() => {
-    if (requestedLock) return
-    setRequestedLock(true)
-    document.body.addEventListener('click', () => document.body.requestPointerLock());
-  }, [requestedLock]);
+    const click = () => document.body.requestPointerLock();
+    document.body.addEventListener('click', click);
+    return () =>  document.body.removeEventListener('click', click);
+  }, []);
+
   useEffect(() => {
     if (!videos.length) return
     let lastSelected = 0;
-    // FIXME: videos cannot change after initial load
-    document.addEventListener('mousemove', (e) => {
+    const mousemove = (e: MouseEvent) => {
         if (!videos.length || e.movementY === 0) return;
         lastSelected = Math.min(
           Math.max(
@@ -38,8 +37,11 @@ function App() {
           videos.length - 1
         );
         setSelected(lastSelected);
-    });
+    };
+    document.addEventListener('mousemove', mousemove);
+    return () => document.removeEventListener('mousemove', mousemove)
   }, [videos]);
+
   useEffect(() => {
     if (loading || loadedVideos) return;
     (async () => {
