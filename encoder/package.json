@@ -9,7 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^10.0.0",
+    "episode-parser": "^2.0.2",
     "find": "^0.3.0",
+    "opensubtitles-api": "^5.1.2",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4"
   }
