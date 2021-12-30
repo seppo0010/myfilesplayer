@@ -22,30 +22,17 @@ const OpenSubtitles = new OS({
 (async function () {
   find.file(regex, source, (files) => {
     files.forEach(async (f) => {
+      const webmPath = path.join(target, path.basename(f.replace(regex, '.webm')));
+      const jsonPath = path.join(target, path.basename(f.replace(regex, '.json')));
+      if (fs.existsSync(webmPath) && fs.existsSync(jsonPath)) {
+        console.log('Skipping', f);
+        return;
+      }
       console.log('Processing', f);
       const episode = episodeParser(path.basename(f));
       const opensubtitles = await OpenSubtitles.hash(f);
-      child_process.spawnSync(
-        'ffmpeg',
-        [
-          '-i',
-          f,
-          '-crf',
-          '0',
-          path.join(
-            target,
-            path.basename(f.replace(regex, '.webm')),
-          ),
-        ],
-        { stdio: 'pipe' },
-      )
-      fs.writeFileSync(
-          path.join(
-            target,
-            path.basename(f.replace(regex, '.json')),
-          ),
-          JSON.stringify({ opensubtitles, episode }),
-      );
+      child_process.spawnSync('ffmpeg', ['-i', f, '-crf', '0', webmPath], { stdio: 'pipe' })
+      fs.writeFileSync(jsonPath, JSON.stringify({ opensubtitles, episode }));
     })
   });
 })();
