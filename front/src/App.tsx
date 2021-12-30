@@ -71,7 +71,13 @@ function App() {
   }
 
   return (
-    <div>
+    <div style={{
+      position: 'relative',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+    }}>
       {loading && 'Loading...'}
       {loadedVideos && (<div>
         <h1>Videos</h1>
@@ -83,7 +89,15 @@ function App() {
           ))}
         </ul>
       </div>)}
-      {videoURL && <ReactPlayer url={videoURL} controls={true} onEnded={videoEnded} playing={true} />}
+      {videoURL && (<div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+      }}>
+        <ReactPlayer url={videoURL} controls={true} onEnded={videoEnded} playing={true} style={{ background: 'black' }} width="100%" height="100%" />
+      </div>)}
     </div>
   );
 }
