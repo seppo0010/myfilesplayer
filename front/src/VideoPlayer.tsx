@@ -105,8 +105,7 @@ function VideoPlayer() {
           color: 'yellow',
           fontSize: '10vh',
           textAlign: 'center',
-        }}>
-          {(subtitles.find((s) => s.start < currentTime && currentTime < s.end) || {}).text}
+        }} dangerouslySetInnerHTML={{__html: (subtitles.find((s) => s.start < currentTime && currentTime < s.end) || {}).text || ''}}>
         </div>
         {!playing && <div style={{
           position: 'fixed',
