@@ -47,6 +47,7 @@ app.get('/api/subtitle/:file_id', async (req: Request, res: Response) => {
     file_id: req.params.file_id,
   });
   const response = await fetch(data.link);
+  res.setHeader('content-type', 'text/plain');
   res.send(await response.text());
 });
 
