@@ -10,6 +10,7 @@ function VideoPlayer() {
   const params = useParams();
   const videoRef = useRef<null | ReactPlayer>(null);
   const navigate = useNavigate();
+  const [selectingSubtitles, setSelectingSubtitles] = useState(false);
   const [playing, setPlaying] = useState(true);
   const [videoProgress, setVideoProgress] = useState(0.0);
   const [subtitles, setSubtitles] = useState<{
@@ -21,13 +22,21 @@ function VideoPlayer() {
 
   const onSubtitlesSelected = (subs: string) => {
     setSubtitles(parseSRT(subs));
+    setSelectingSubtitles(false);
   }
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       switch(e.keyCode) {
+        case 67: // "c"
+          setSelectingSubtitles(true);
+          break;
         case 27: // esc
-          navigate('/');
+          if (selectingSubtitles) {
+            setSelectingSubtitles(false);
+          } else {
+            navigate('/');
+          }
           break;
         case 19: // pause
         case 32: // space bar
@@ -46,7 +55,7 @@ function VideoPlayer() {
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [playing, videoRef, navigate]);
+  }, [playing, videoRef, navigate, selectingSubtitles]);
 
   const onVideoEnded = () => {
     setTimeout(() => {
@@ -86,7 +95,7 @@ function VideoPlayer() {
         height: '100%',
       }}>
         <ReactPlayer url={`/videos/${params.videoId}.webm`} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={playing} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} />
-        {params.videoId && <SubtitleMenu video={params.videoId} onSelected={onSubtitlesSelected} />}
+        {selectingSubtitles && params.videoId && <SubtitleMenu video={params.videoId} onSelected={onSubtitlesSelected} />}
         <div style={{
           position: 'fixed',
           bottom: 20,
