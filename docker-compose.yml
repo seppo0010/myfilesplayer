@@ -5,7 +5,7 @@ services:
     networks:
       - front-webserver
     ports:
-      - "8000:80"
+      - "8089:80"
     depends_on:
       - webserver
   webserver:
