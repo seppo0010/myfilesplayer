@@ -52,11 +52,10 @@ function VideoList() {
 
   useEffect(() => {
     const click = () => {
-      if (!document.pointerLockElement) {
+      try {
         document.body.requestPointerLock();
-      } else {
-        navigate(`/play/${encodeURIComponent(videos[selected].filename)}`);
-      }
+      } catch (e) {}
+      navigate(`/play/${encodeURIComponent(videos[selected].filename)}`);
     }
     document.body.addEventListener('click', click);
     return () =>  document.body.removeEventListener('click', click);
