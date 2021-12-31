@@ -11,11 +11,11 @@ dotenv.config()
 
 const app = express();
 const port = process.env.PORT || 3000;
-const videosPath = process.argv[2];
-const os = new OS({apikey: process.env.OS_API_KEY});
+const videosPath = process.env.VIDEOS_PATH || process.argv[2];
+const os = new OS({apikey: process.env.OS_API_KEY || fs.readFileSync('/var/run/secrets/osdb_api_key', 'utf-8').trim()});
 os.login({
-  username: process.env.OS_USERNAME,
-  password: process.env.OS_PASSWORD,
+  username: process.env.OS_USERNAME || fs.readFileSync('/var/run/secrets/osdb_login', 'utf-8').trim(),
+  password: process.env.OS_PASSWORD || fs.readFileSync('/var/run/secrets/osdb_password', 'utf-8').trim(),
 });
 
 app.get('/api/videos.json', async (req: Request, res: Response) => {

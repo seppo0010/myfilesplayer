@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  front:
+    build: front
+    networks:
+      - front-webserver
+    ports:
+      - "8000:80"
+  webserver:
+    build: webserver
+    networks:
+      - front-webserver
+    environment:
+      - VIDEOS_PATH=/videos
+    volumes:
+        - ./videos:/videos
+    secrets:
+      - osdb_login
+      - osdb_password
+      - osdb_api_key
+
+secrets:
+  osdb_login:
+    file: ./osdb_login
+  osdb_password:
+    file: ./osdb_password
+  osdb_api_key:
+    file: ./osdb_api_key
+
+networks:
+  front-webserver:
