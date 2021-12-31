@@ -56,7 +56,6 @@ function VideoList() {
         document.body.requestPointerLock();
       } else {
         navigate(`/play/${encodeURIComponent(videos[selected].filename)}`);
-        document.exitPointerLock();
       }
     }
     document.body.addEventListener('click', click);
