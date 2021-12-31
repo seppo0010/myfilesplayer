@@ -6,6 +6,8 @@ services:
       - front-webserver
     ports:
       - "8000:80"
+    depends_on:
+      - webserver
   webserver:
     build: webserver
     networks:
