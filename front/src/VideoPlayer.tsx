@@ -2,7 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import ReactPlayer from 'react-player';
 import formatDuration from 'format-duration';
+import parseSRT from 'parse-srt'
 
+import SubtitleMenu from './SubtitleMenu';
 
 function VideoPlayer() {
   const params = useParams();
@@ -10,6 +12,16 @@ function VideoPlayer() {
   const navigate = useNavigate();
   const [playing, setPlaying] = useState(true);
   const [videoProgress, setVideoProgress] = useState(0.0);
+  const [subtitles, setSubtitles] = useState<{
+    // FIXME: move to parse-srt.d.ts
+    start: number,
+    end: number,
+    text: string,
+  }[]>([]);
+
+  const onSubtitlesSelected = (subs: string) => {
+    setSubtitles(parseSRT(subs));
+  }
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -56,6 +68,7 @@ function VideoPlayer() {
     setPlaying(!playing);
   }
 
+  const currentTime = videoRef.current?.getCurrentTime() || 0;
   return (
     <div style={{
       position: 'relative',
@@ -73,6 +86,18 @@ function VideoPlayer() {
         height: '100%',
       }}>
         <ReactPlayer url={`/videos/${params.videoId}.webm`} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={playing} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} />
+        {params.videoId && <SubtitleMenu video={params.videoId} onSelected={onSubtitlesSelected} />}
+        <div style={{
+          position: 'fixed',
+          bottom: 20,
+          left: '2%',
+          width: '96%',
+          color: 'yellow',
+          fontSize: '10vh',
+          textAlign: 'center',
+        }}>
+          {(subtitles.find((s) => s.start < currentTime && currentTime < s.end) || {}).text}
+        </div>
         {!playing && <div style={{
           position: 'fixed',
           bottom: 10,
