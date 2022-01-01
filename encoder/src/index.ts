@@ -33,7 +33,7 @@ find.file(regex, source, async (files: string[]) => {
         params.push('-t');
         params.push(process.env.DURATION);
       }
-      const sh = execa('ffmpeg', ['-i', f].concat(params).concat(['-vcodec', 'libx264', '-acodec', 'aac', mp4Path]));
+      const sh = execa('ffmpeg', ['-y', '-vsync', '0', '-hwaccel', 'cuda', '-hwaccel_output_format', 'cuda', '-i', f, '-c:a', 'aac', '-c:v', 'h264_nvenc', '-b:v', '5M'].concat(params).concat([mp4Path]));
       sh.stdout?.pipe(process.stdout)
       sh.stderr?.pipe(process.stderr);
       await sh
