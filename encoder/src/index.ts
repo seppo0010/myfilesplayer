@@ -28,7 +28,6 @@ find.file(regex, source, async (files: string[]) => {
   for (let f of files) {
     console.log('Processing', f);
 
-    /*
     const mp4Path = path.join(target, path.basename(f.replace(regex, '.mp4')));
     if (fs.existsSync(mp4Path)) {
       console.log('Skipping mp4', f);
@@ -50,7 +49,6 @@ find.file(regex, source, async (files: string[]) => {
     } else {
       await execa('ffmpeg', ['-ss', '200', '-i', f, '-vframes', '1', '-q:v', '2', '-s', '400x200', thumbnailPath]);
     }
-    */
 
     const jsonPath = path.join(target, path.basename(f.replace(regex, '.json')));
     if (fs.existsSync(jsonPath)) {

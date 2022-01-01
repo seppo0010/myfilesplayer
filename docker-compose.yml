@@ -20,6 +20,7 @@ services:
       - osdb_login
       - osdb_password
       - osdb_api_key
+      - tmdb_api_key
 
 secrets:
   osdb_login:
