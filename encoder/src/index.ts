@@ -24,16 +24,16 @@ find.file(regex, source, async (files: string[]) => {
   for (let f of files) {
     console.log('Processing', f);
 
-    const webmPath = path.join(target, path.basename(f.replace(regex, '.webm')));
-    if (fs.existsSync(webmPath)) {
-      console.log('Skipping webm', f);
+    const mp4Path = path.join(target, path.basename(f.replace(regex, '.mp4')));
+    if (fs.existsSync(mp4Path)) {
+      console.log('Skipping mp4', f);
     } else {
       const params = [];
       if (process.env.DURATION) {
         params.push('-t');
         params.push(process.env.DURATION);
       }
-      const sh = execa('ffmpeg', ['-i', f].concat(params).concat(['-crf', '0', webmPath]));
+      const sh = execa('ffmpeg', ['-i', f].concat(params).concat(['-vcodec', 'libx264', '-acodec', 'aac', mp4Path]));
       sh.stdout?.pipe(process.stdout)
       sh.stderr?.pipe(process.stderr);
       await sh
