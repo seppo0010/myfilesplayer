@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 
 interface Video {
@@ -20,6 +20,9 @@ function VideoList() {
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
   const [selected, setSelected] = useState(0);
+  const [centerY, setCenterY] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const listItemsRef = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
     if (loading || loadedVideos) return;
@@ -41,6 +44,11 @@ function VideoList() {
       videos.length - 1
     );
     setSelected(s);
+    const cur = listItemsRef.current[s];
+    const cont = containerRef.current;
+    if (cur && cont) {
+      setCenterY(cont.clientHeight - cur.offsetTop - cur.clientHeight);
+    }
     return s;
   }, [selected, videos]);
 
@@ -81,13 +89,22 @@ function VideoList() {
     return () => document.removeEventListener('keydown', handleKey);
   }, [selected, videos, navigate, updateSelected]);
 
-  return <div>
+  useEffect(() => {
+     listItemsRef.current = listItemsRef.current.slice(0, videos.length);
+  }, [videos]);
+
+  return <div style={{height: '100%'}}>
       {loading && 'Loading...'}
-      {loadedVideos && (<div>
+      {loadedVideos && (<div ref={containerRef} style={{
+          height: '100%',
+          marginTop: '-50%',
+          position: 'relative',
+          top: centerY,
+        }}>
         <h1>Videos</h1>
         <ul>
           {videos.map((v, i) => (
-            <li key={v.filename} style={i === selected ? {color: 'red'} : {}}>
+            <li key={v.filename} style={i === selected ? {color: 'red'} : {}} ref={(el) => listItemsRef.current[i] = el}>
               {v.filename}
             </li>
           ))}
