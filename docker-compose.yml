@@ -28,6 +28,8 @@ secrets:
     file: ./osdb_password
   osdb_api_key:
     file: ./osdb_api_key
+  tmdb_api_key:
+    file: ./tmdb_api_key
 
 networks:
   front-webserver:
