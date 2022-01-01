@@ -32,23 +32,27 @@ function VideoList() {
     })();
   });
 
+  const updateSelected = React.useCallback((diff: number) => {
+    const s = Math.min(
+      Math.max(
+        0,
+        selected + diff
+      ),
+      videos.length - 1
+    );
+    setSelected(s);
+    return s;
+  }, [selected, videos]);
+
   useEffect(() => {
     if (!videos.length) return
-    let lastSelected = selected;
     const mousemove = (e: MouseEvent) => {
         if (!videos.length || e.movementY === 0) return;
-        lastSelected = Math.min(
-          Math.max(
-            0,
-            lastSelected + (e.movementY > 0 ? 1 : -1)
-          ),
-          videos.length - 1
-        );
-        setSelected(lastSelected);
+        updateSelected(e.movementY > 0 ? 1 : -1);
     };
     document.addEventListener('mousemove', mousemove);
     return () => document.removeEventListener('mousemove', mousemove)
-  }, [videos, selected]);
+  }, [videos, updateSelected]);
 
   useEffect(() => {
     const click = () => {
@@ -69,19 +73,13 @@ function VideoList() {
           break;
         case 38: // up arrow
         case 40: // down arrow
-          setSelected(Math.min(
-            Math.max(
-              0,
-              selected + e.keyCode - 39
-            ),
-            videos.length - 1
-          ));
+          updateSelected(e.keyCode - 39);
           break;
       }
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [selected, videos, navigate]);
+  }, [selected, videos, navigate, updateSelected]);
 
   return <div>
       {loading && 'Loading...'}
