@@ -12,6 +12,12 @@ interface Video {
     season: number
     episode: number
   }
+  movieData?: {
+    backdropPath: string
+  }
+  episodeData?: {
+    stillPath: string
+  }
 }
 
 function VideoList() {
@@ -20,7 +26,7 @@ function VideoList() {
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
   const [selected, setSelected] = useState(0);
-  const [centerY, setCenterY] = useState(0);
+  const [positionY, setPositionY] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const listItemsRef = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -47,7 +53,7 @@ function VideoList() {
     const cur = listItemsRef.current[s];
     const cont = containerRef.current;
     if (cur && cont) {
-      setCenterY(cont.clientHeight - cur.offsetTop - cur.clientHeight);
+      setPositionY(- cur.offsetTop);
     }
     return s;
   }, [selected, videos]);
@@ -75,6 +81,7 @@ function VideoList() {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      e.preventDefault();
       switch(e.keyCode) {
         case 13: // enter
           navigate(`/play/${encodeURIComponent(videos[selected].filename)}`);
@@ -97,15 +104,16 @@ function VideoList() {
       {loading && 'Loading...'}
       {loadedVideos && (<div ref={containerRef} style={{
           height: '100%',
-          marginTop: '-50%',
           position: 'relative',
-          top: centerY,
+          top: positionY,
         }}>
         <h1>Videos</h1>
         <ul>
           {videos.map((v, i) => (
             <li key={v.filename} style={i === selected ? {color: 'red'} : {}} ref={(el) => listItemsRef.current[i] = el}>
               {v.filename}
+              {v.movieData && v.movieData.backdropPath && <img src={`https://image.tmdb.org/t/p/w500${v.movieData.backdropPath}`} style={{display: 'block'}} />}
+              {(!v.movieData || !v.movieData.backdropPath) && v.episodeData && v.episodeData.stillPath && <img src={`https://image.tmdb.org/t/p/w500${v.episodeData.stillPath}`} style={{display: 'block'}} />}
             </li>
           ))}
         </ul>
