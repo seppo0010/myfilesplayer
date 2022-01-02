@@ -36,6 +36,7 @@ app.get('/api/subtitles/:video', async (req: Request, res: Response) => {
     `${req.params.video}.json`
   ), 'utf-8'));
   const data = await os.subtitles({
+    moviehash: fileData.opensubtitles.moviehash,
     query: fileData.episode.show,
     season_number: fileData.episode.season,
     episode_number: fileData.episode.episode,
