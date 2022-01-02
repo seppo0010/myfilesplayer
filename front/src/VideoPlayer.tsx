@@ -28,6 +28,7 @@ function VideoPlayer() {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       switch(e.keyCode) {
+        case 406: // blue
         case 460: // "subtitle"
         case 67: // "c"
           setSelectingSubtitles(!selectingSubtitles);
