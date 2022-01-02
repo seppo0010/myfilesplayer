@@ -28,7 +28,18 @@ const getVideoId = async (videoName: string): number => {
   return res.rows[0].id;
 }
 
-app.post('/api/update_progress', async (req: Request, res: Response) => {
+app.get('/api/progress/:videoId', async (req: Request, res: Response) => {
+  const userId = 1; // single user for now
+  const q = await query(`SELECT progress FROM user_progress
+    WHERE user_id = $1 AND video_id = $2
+  `, [
+    userId,
+    await getVideoId(req.params.videoId),
+  ])
+  res.json({progress: q.rows.length > 0 ? q.rows[0].progress : 0.0});
+});
+
+app.post('/api/progress', async (req: Request, res: Response) => {
   const userId = 1; // single user for now
   await query(`INSERT INTO user_progress
     (user_id, video_id, progress)

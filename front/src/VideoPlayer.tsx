@@ -20,6 +20,22 @@ function VideoPlayer() {
     text: string,
   }[]>([]);
 
+  const [initialProgress, setInitialProgress] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (initialProgress !== null) return;
+      try {
+        const res = await fetch(`/api/progress/${encodeURIComponent(params.videoId || '')}`);
+        const data = await res.json();
+        setInitialProgress(data.progress || 0.0);
+        videoRef.current?.seekTo(data.progress, 'seconds');
+      } catch (e) {
+        setInitialProgress(0.0);
+      }
+    })();
+  }, [initialProgress, params.videoId])
+
   const onSubtitlesSelected = (subs: string) => {
     setSubtitles(parseSRT(subs));
     setSelectingSubtitles(false);
@@ -29,7 +45,7 @@ function VideoPlayer() {
     const timeInterval = setInterval(() => {
       if (videoRef.current === null) return;
       const progress = videoRef.current.getCurrentTime()
-      fetch('/api/update_progress', {
+      fetch('/api/progress', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -95,6 +111,9 @@ function VideoPlayer() {
     setPlaying(!playing);
   }
 
+  if (initialProgress === null) {
+    return <div />
+  }
   const currentTime = videoRef.current?.getCurrentTime() || 0;
   return (
     <div style={{
