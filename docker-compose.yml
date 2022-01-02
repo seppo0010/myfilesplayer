@@ -12,15 +12,30 @@ services:
     build: webserver
     networks:
       - front-webserver
+      - database-webserver
     environment:
       - VIDEOS_PATH=/videos
+      - POSTGRES_HOST=database
+    depends_on:
+      - database
     volumes:
         - ./videos:/videos
+    env_file: ./postgres-config
     secrets:
+      - postgres-password
       - osdb_login
       - osdb_password
       - osdb_api_key
       - tmdb_api_key
+  database:
+    image: postgres
+    env_file: ./postgres-config
+    secrets:
+      - postgres-password
+    networks:
+      - database-webserver
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
 secrets:
   osdb_login:
@@ -31,6 +46,12 @@ secrets:
     file: ./osdb_api_key
   tmdb_api_key:
     file: ./tmdb_api_key
+  postgres-password:
+    file: ./postgres-password
 
 networks:
   front-webserver:
+  database-webserver:
+
+volumes:
+  pgdata:
