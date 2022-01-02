@@ -16,6 +16,7 @@ function SubtitleMenu({ video, onSelected }: { video: string, onSelected: (subs:
   const [loading, setLoading] = useState(false);
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [subtitlesLoaded, setSubtitlesLoaded] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   // FIXME: copy paste, extract list logic to a component
   useEffect(() => {
@@ -49,6 +50,7 @@ function SubtitleMenu({ video, onSelected }: { video: string, onSelected: (subs:
   }, [loading, subtitlesLoaded, video])
 
   const downloadSubtitle = useCallback(async () => {
+    setDownloading(true);
     const res = await fetch(`/api/subtitle/${encodeURIComponent(subtitles[selected].attributes.files[0].file_id)}`)
     const subs = await res.text();
     onSelected(subs)
@@ -84,6 +86,7 @@ function SubtitleMenu({ video, onSelected }: { video: string, onSelected: (subs:
     return () => document.removeEventListener('keydown', handleKey);
   }, [selected, subtitles, downloadSubtitle]);
 
+  if (downloading) return <div />
   return (<div style={{
     position: 'fixed',
     top: '40%',
@@ -94,6 +97,7 @@ function SubtitleMenu({ video, onSelected }: { video: string, onSelected: (subs:
     left: '20%',
     overflow: 'hidden',
   }}>
+    {loading && 'Loading...'}
     {subtitles.length > 0 && <ul>
       {subtitles.map((s, i) => (<li key={s.id} style={i === selected ? {color: 'red'} : {}}>
         {s.attributes.language}
