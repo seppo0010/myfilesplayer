@@ -96,7 +96,7 @@ function VideoPlayer() {
         width: '100%',
         height: '100%',
       }}>
-        <ReactPlayer url={`/videos/${params.videoId}.mp4`} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={playing} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} />
+        <ReactPlayer url={`/videos/${params.videoId}.mp4`} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={playing} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} onPause={() => setPlaying(false)} onPlay={() => setPlaying(true)} />
         {selectingSubtitles && params.videoId && <SubtitleMenu video={params.videoId} onSelected={onSubtitlesSelected} />}
         <div style={{
           position: 'fixed',
