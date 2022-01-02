@@ -112,8 +112,8 @@ function VideoList() {
           {videos.map((v, i) => (
             <li key={v.filename} style={i === selected ? {color: 'red'} : {}} ref={(el) => listItemsRef.current[i] = el}>
               {v.filename}
-              {v.movieData && v.movieData.backdropPath && <img src={`https://image.tmdb.org/t/p/w500${v.movieData.backdropPath}`} style={{display: 'block'}} />}
-              {(!v.movieData || !v.movieData.backdropPath) && v.episodeData && v.episodeData.stillPath && <img src={`https://image.tmdb.org/t/p/w500${v.episodeData.stillPath}`} style={{display: 'block'}} />}
+              {v.movieData && v.movieData.backdropPath && <img src={`https://image.tmdb.org/t/p/w500${v.movieData.backdropPath}`} style={{display: 'block'}} alt="" />}
+              {(!v.movieData || !v.movieData.backdropPath) && v.episodeData && v.episodeData.stillPath && <img src={`https://image.tmdb.org/t/p/w500${v.episodeData.stillPath}`} style={{display: 'block'}} alt="" />}
             </li>
           ))}
         </ul>
