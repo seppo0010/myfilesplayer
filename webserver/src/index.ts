@@ -22,7 +22,7 @@ os.login({
   password: process.env.OS_PASSWORD || fs.readFileSync('/var/run/secrets/osdb_password', 'utf-8').trim(),
 });
 
-const getVideoId = async (videoName: string): number => {
+const getVideoId = async (videoName: string): Promise<number> => {
   const text = `INSERT INTO videos (filename) VALUES ($1) ON CONFLICT (filename) DO UPDATE SET filename = EXCLUDED.filename RETURNING id;`;
   const res = await query(text, [videoName]);
   return res.rows[0].id;
