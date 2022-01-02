@@ -100,10 +100,9 @@ function VideoList() {
      listItemsRef.current = listItemsRef.current.slice(0, videos.length);
   }, [videos]);
 
-  return <div style={{height: '100%'}}>
+  return <div style={{height: '100%', overflow: 'hidden'}}>
       {loading && 'Loading...'}
       {loadedVideos && (<div ref={containerRef} style={{
-          height: '100%',
           position: 'relative',
           top: positionY,
         }}>
