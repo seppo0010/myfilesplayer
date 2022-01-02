@@ -30,7 +30,7 @@ function VideoPlayer() {
       switch(e.keyCode) {
         case 460: // "subtitle"
         case 67: // "c"
-          setSelectingSubtitles(true);
+          setSelectingSubtitles(!selectingSubtitles);
           break;
         case 27: // esc
           if (selectingSubtitles) {
