@@ -6,16 +6,41 @@ import express, { Request, Response } from 'express';
 import * as dotenv from 'dotenv';
 import OS from 'opensubtitles.com';
 import fetch from 'node-fetch';
+import bodyParser from 'body-parser';
+
+import { query } from './db'
 
 dotenv.config()
 
 const app = express();
+app.use(bodyParser.json())
 const port = process.env.PORT || 3000;
 const videosPath = process.env.VIDEOS_PATH || process.argv[2];
 const os = new OS({apikey: process.env.OS_API_KEY || fs.readFileSync('/var/run/secrets/osdb_api_key', 'utf-8').trim()});
 os.login({
   username: process.env.OS_USERNAME || fs.readFileSync('/var/run/secrets/osdb_login', 'utf-8').trim(),
   password: process.env.OS_PASSWORD || fs.readFileSync('/var/run/secrets/osdb_password', 'utf-8').trim(),
+});
+
+const getVideoId = async (videoName: string): number => {
+  const text = `INSERT INTO videos (filename) VALUES ($1) ON CONFLICT (filename) DO UPDATE SET filename = EXCLUDED.filename RETURNING id;`;
+  const res = await query(text, [videoName]);
+  return res.rows[0].id;
+}
+
+app.post('/api/update_progress', async (req: Request, res: Response) => {
+  const userId = 1; // single user for now
+  await query(`INSERT INTO user_progress
+    (user_id, video_id, progress)
+    VALUES
+    ($1, $2, $3)
+    ON CONFLICT (user_id, video_id) DO UPDATE SET progress = EXCLUDED.progress
+  `, [
+    userId,
+    await getVideoId(req.body.video),
+    parseFloat(req.body.progress),
+  ])
+  res.json({});
 });
 
 app.get('/api/videos.json', async (req: Request, res: Response) => {

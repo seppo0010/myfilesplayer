@@ -26,6 +26,22 @@ function VideoPlayer() {
   }
 
   useEffect(() => {
+    const timeInterval = setInterval(() => {
+      if (videoRef.current === null) return;
+      const progress = videoRef.current.getCurrentTime()
+      fetch('/api/update_progress', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          video: params.videoId,
+          progress,
+        })
+      })
+    }, 5000);
+    return () => clearInterval(timeInterval);
+  }, [params.videoId, videoRef]);
+
+  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       switch(e.keyCode) {
         case 406: // blue
@@ -96,7 +112,7 @@ function VideoPlayer() {
         width: '100%',
         height: '100%',
       }}>
-        <ReactPlayer url={`/videos/${params.videoId}.mp4`} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={playing} style={{ background: 'black' }} width="100%" height="100%" ref={videoRef} onPause={() => setPlaying(false)} onPlay={() => setPlaying(true)} />
+        <ReactPlayer url={`/videos/${params.videoId}.mp4`} controls={false} onEnded={onVideoEnded} onProgress={onProgress} playing={playing} style={{ background: 'black', opacity: playing ? 1 : 0.4 }} width="100%" height="100%" ref={videoRef} onPause={() => setPlaying(false)} onPlay={() => setPlaying(true)} />
         {selectingSubtitles && params.videoId && <SubtitleMenu video={params.videoId} onSelected={onSubtitlesSelected} />}
         <div style={{
           position: 'fixed',
