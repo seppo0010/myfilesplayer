@@ -43,13 +43,6 @@ find.file(regex, source, async (files: string[]) => {
       await sh
     }
 
-    const thumbnailPath = path.join(target, path.basename(f.replace(regex, '.jpg')));
-    if (fs.existsSync(thumbnailPath)) {
-      console.log('Skipping thumbnail', f);
-    } else {
-      await execa('ffmpeg', ['-ss', '200', '-i', f, '-vframes', '1', '-q:v', '2', '-s', '400x200', thumbnailPath]);
-    }
-
     const jsonPath = path.join(target, path.basename(f.replace(regex, '.json')));
     if (fs.existsSync(jsonPath)) {
       console.log('Skipping json', f);
