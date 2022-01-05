@@ -179,7 +179,7 @@ function VideoList() {
         }}>
         <ul>
           {moviesOrShow.map((mOrS, i) => (
-            <li key={mOrS.movie?.id + ',' + mOrS.show?.id} style={i === selected ? {color: 'red'} : {}}>
+            <li key={mOrS.movie?.id + ',' + mOrS.show?.id} style={i === selected ? {color: 'red'} : {}} ref={(el) => listItemsRef.current[i] = el}>
               {mOrS.movie && (<>
                 {mOrS.movie.title}
                 <img src={`https://image.tmdb.org/t/p/w500${mOrS.movie.backdroppath}`} alt="" />
