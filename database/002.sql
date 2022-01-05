@@ -1,0 +1,26 @@
+CREATE TABLE IF NOT EXISTS movie (
+	id SERIAL,
+	video INTEGER NOT NULL UNIQUE,
+	title VARCHAR(511),
+	backdropPath VARCHAR(255)
+);
+
+ALTER TABLE videos ADD COLUMN moviehash CHAR(16);
+
+CREATE TABLE IF NOT EXISTS show (
+	id SERIAL,
+	tmdb_id INTEGER NOT NULL UNIQUE,
+	name VARCHAR(511),
+	backdropPath VARCHAR(255),
+	overview TEXT
+);
+
+CREATE TABLE IF NOT EXISTS episode (
+	id SERIAL,
+	video INTEGER NOT NULL UNIQUE,
+	show INTEGER NOT NULL,
+	name VARCHAR(511),
+	stillPath VARCHAR(255),
+	episode INTEGER,
+	season INTEGER
+);

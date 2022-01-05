@@ -2,22 +2,39 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 
 interface Video {
+  id: number
   filename: string
-  opensubtitles: {
-    moviehash: string
-    moviebytesize: string
-  }
-  episode: null | {
-    show: string
-    season: number
-    episode: number
-  }
-  movieData?: {
-    backdropPath: string
-  }
-  episodeData?: {
-    stillPath: string
-  }
+  moviehash: string
+}
+
+interface Show {
+  id: number
+  tmdb_id: number
+  name: string
+  backdroppath: string
+  overview: string
+}
+
+interface Episode {
+  id: number
+  video: number
+  show: number
+  name: string
+  stillpath: string
+  episode: number
+  season: number
+}
+
+interface Movie {
+  id: number
+  video: number
+  title: string
+  backdroppath: string
+}
+
+interface MovieOrShow {
+  movie?: Movie
+  show?: Show
 }
 
 function VideoList() {
@@ -25,8 +42,12 @@ function VideoList() {
   const [loading, setLoading] = useState(false);
   const [loadedVideos, setLoadedVideos] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [moviesOrShow, setMoviesOrShow] = useState<MovieOrShow[]>([]);
   const [selected, setSelected] = useState(0);
+  const [selectedEpisode, setSelectedEpisode] = useState(0);
   const [positionY, setPositionY] = useState(0);
+  const [selectedShowEpisodes, setSelectedShowEpisodes] = useState<Episode[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const listItemsRef = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -35,11 +56,30 @@ function VideoList() {
     (async () => {
         setLoading(true);
         const res = await fetch('/api/videos.json');
-        setVideos(await res.json());
+        const data = await res.json();
+        setEpisodes(data.episodes);
+        setVideos(data.videos);
+        setMoviesOrShow(data.movies
+          .map((movie: Movie) => ({ movie }))
+          .concat(data.shows
+            .map((show: Show) => ({ show }))
+          )
+        );
         setLoadedVideos(true);
         setLoading(false);
     })();
   });
+
+  const updateSelectedEpisode = React.useCallback((diff: number) => {
+    const s = Math.min(
+      Math.max(
+        0,
+        selectedEpisode + diff
+      ),
+      selectedShowEpisodes.length - 1
+    );
+    setSelectedEpisode(s);
+  }, [selectedEpisode, selectedShowEpisodes]);
 
   const updateSelected = React.useCallback((diff: number) => {
     const s = Math.min(
@@ -47,58 +87,89 @@ function VideoList() {
         0,
         selected + diff
       ),
-      videos.length - 1
+      moviesOrShow.length - 1
     );
     setSelected(s);
+
+    const movieOrShow = moviesOrShow[s];
+    if (movieOrShow.movie) {
+      setSelectedShowEpisodes([]);
+    } else if (movieOrShow.show) {
+      const show = movieOrShow.show;
+      setSelectedShowEpisodes(episodes.filter((e) => e.show === show.id));
+    }
+
     const cur = listItemsRef.current[s];
     const cont = containerRef.current;
     if (cur && cont) {
       setPositionY(- cur.offsetTop);
     }
     return s;
-  }, [selected, videos]);
+  }, [selected, moviesOrShow, episodes]);
 
   useEffect(() => {
-    if (!videos.length) return
+    if (!moviesOrShow.length) return
     const mousemove = (e: MouseEvent) => {
-        if (!videos.length || e.movementY === 0) return;
-        updateSelected(e.movementY > 0 ? 1 : -1);
+        if (moviesOrShow.length && e.movementY !== 0) {
+          updateSelected(e.movementY > 0 ? 1 : -1);
+        }
+        if (selectedShowEpisodes.length && e.movementX !== 0) {
+          updateSelectedEpisode(e.movementX > 0 ? 1 : -1);
+        }
     };
     document.addEventListener('mousemove', mousemove);
     return () => document.removeEventListener('mousemove', mousemove)
-  }, [videos, updateSelected]);
+  }, [moviesOrShow, updateSelected, updateSelectedEpisode, selectedShowEpisodes]);
+
+  const openSelected = React.useCallback(() => {
+    const movieOrShow = moviesOrShow[selected];
+    let id = 0;
+    if (movieOrShow.movie) {
+      id = movieOrShow.movie.video;
+    } else if (movieOrShow.show) {
+      id = selectedShowEpisodes[selectedEpisode].video
+    }
+    const video = videos.find((v) => v.id === id)
+    if (video) {
+      navigate(`/play/${encodeURIComponent(video.filename)}`);
+    }
+  }, [moviesOrShow, navigate, selected, videos, selectedEpisode, selectedShowEpisodes]);
 
   useEffect(() => {
     const click = () => {
       try {
         document.body.requestPointerLock();
       } catch (e) {}
-      navigate(`/play/${encodeURIComponent(videos[selected].filename)}`);
+      openSelected();
     }
     document.body.addEventListener('click', click);
     return () =>  document.body.removeEventListener('click', click);
-  }, [videos, selected, navigate]);
+  }, [openSelected]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       e.preventDefault();
       switch(e.keyCode) {
         case 13: // enter
-          navigate(`/play/${encodeURIComponent(videos[selected].filename)}`);
+          openSelected();
           break;
         case 38: // up arrow
         case 40: // down arrow
           updateSelected(e.keyCode - 39);
           break;
+        case 37: // left arrow
+        case 39: // right arrow
+          updateSelectedEpisode(e.keyCode - 38);
+          break;
       }
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [selected, videos, navigate, updateSelected]);
+  }, [updateSelected, updateSelectedEpisode, openSelected]);
 
   useEffect(() => {
-     listItemsRef.current = listItemsRef.current.slice(0, videos.length);
-  }, [videos]);
+     listItemsRef.current = listItemsRef.current.slice(0, moviesOrShow.length);
+  }, [moviesOrShow]);
 
   return <div style={{height: '100%', overflow: 'hidden'}}>
       {loading && 'Loading...'}
@@ -106,13 +177,26 @@ function VideoList() {
           position: 'relative',
           top: positionY,
         }}>
-        <h1>Videos</h1>
         <ul>
-          {videos.map((v, i) => (
-            <li key={v.filename} style={i === selected ? {color: 'red'} : {}} ref={(el) => listItemsRef.current[i] = el}>
-              {v.filename}
-              {v.movieData && v.movieData.backdropPath && <img src={`https://image.tmdb.org/t/p/w500${v.movieData.backdropPath}`} style={{display: 'block'}} alt="" />}
-              {(!v.movieData || !v.movieData.backdropPath) && v.episodeData && v.episodeData.stillPath && <img src={`https://image.tmdb.org/t/p/w500${v.episodeData.stillPath}`} style={{display: 'block'}} alt="" />}
+          {moviesOrShow.map((mOrS, i) => (
+            <li key={mOrS.movie?.id + ',' + mOrS.show?.id} style={i === selected ? {color: 'red'} : {}}>
+              {mOrS.movie && (<>
+                {mOrS.movie.title}
+                <img src={`https://image.tmdb.org/t/p/w500${mOrS.movie.backdroppath}`} alt="" />
+              </>)}
+              {mOrS.show && (<>
+                {i === selected && selectedShowEpisodes.length > 0 && selectedShowEpisodes[selectedEpisode] && (<>
+                  {mOrS.show.name}{' '}
+                  {selectedShowEpisodes[selectedEpisode].season}x
+                  {selectedShowEpisodes[selectedEpisode].episode}{' '}
+                  {selectedShowEpisodes[selectedEpisode].name}
+                  <img src={`https://image.tmdb.org/t/p/w500${selectedShowEpisodes[selectedEpisode].stillpath}`} alt="" />
+                </>)}
+                {(i !== selected || selectedShowEpisodes.length === 0) && (<>
+                  {mOrS.show.name}
+                  <img src={`https://image.tmdb.org/t/p/w500${mOrS.show.backdroppath}`} alt="" />
+                </>)}
+              </>)}
             </li>
           ))}
         </ul>

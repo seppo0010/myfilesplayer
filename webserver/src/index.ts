@@ -55,16 +55,21 @@ app.post('/api/progress', async (req: Request, res: Response) => {
 });
 
 app.get('/api/videos.json', async (req: Request, res: Response) => {
-  const files = Array.prototype.slice.call(await Promise.all(
-    Array.prototype.slice.call(await fs.promises
-                                           .readdir(videosPath))
-    .filter((f) => f.endsWith('.json'))
-    .map((f) => fs.promises.readFile(path.join(videosPath, f)))
-  )).map((f) => JSON.parse(f));
-  files.sort();
+  const [episodes, movies, shows, videos]  = await Promise.all([
+    query(`SELECT * FROM episode`),
+    query(`SELECT * FROM movie`),
+    query(`SELECT * FROM show`),
+    query(`SELECT * FROM videos`),
+  ]);
   res.type('application/json');
-  res.json(files);
-})
+  res.json({
+    episodes: episodes.rows,
+    movies: movies.rows,
+    shows: shows.rows,
+    videos: videos.rows,
+  });
+});
+
 app.use('/videos', express.static(videosPath));
 app.get('/api/subtitles/:video', async (req: Request, res: Response) => {
   const fileData = JSON.parse(await fs.promises.readFile(path.join(

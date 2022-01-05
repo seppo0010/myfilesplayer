@@ -9,8 +9,30 @@ import * as dotenv from 'dotenv';
 import episodeParser from 'episode-parser';
 import tnp from 'torrent-name-parser';
 import { Tmdb } from 'tmdb';
+import pg from 'pg';
+const { Pool } = pg;
 
 dotenv.config()
+
+const getFileContents = (path: string): string => {
+  try {
+    return fs.readFileSync('/var/run/secrets/pg_hostname', 'utf-8').trim()
+  } catch (e) {
+    return '';
+  }
+}
+const pool = new Pool({
+  host: process.env.PG_HOSTNAME || getFileContents('/var/run/secrets/pg_hostname'),
+  user: process.env.PG_USERNAME || getFileContents('/var/run/secrets/pg_username'),
+  database: process.env.PG_DATABASE || getFileContents('/var/run/secrets/pg_database'),
+  password: process.env.PG_PASSWORD || getFileContents('/var/run/secrets/pg_password'),
+  port: parseInt(process.env.PG_PORT || getFileContents('/var/run/secrets/pg_port'), 10),
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+const query = (text: string, params: any[]) => pool.query(text, params);
 
 const regex = /\.(avi|mp4|mkv)$/;
 const source = process.argv[2];
@@ -43,19 +65,20 @@ find.file(regex, source, async (files: string[]) => {
       await sh
     }
 
-    const thumbnailPath = path.join(target, path.basename(f.replace(regex, '.jpg')));
-    if (fs.existsSync(thumbnailPath)) {
-      console.log('Skipping thumbnail', f);
-    } else {
-      await execa('ffmpeg', ['-ss', '200', '-i', f, '-vframes', '1', '-q:v', '2', '-s', '400x200', thumbnailPath]);
-    }
-
-    const jsonPath = path.join(target, path.basename(f.replace(regex, '.json')));
-    if (fs.existsSync(jsonPath)) {
-      console.log('Skipping json', f);
+    const videoId = path.basename(f.replace(regex, ''));
+    const sql = `SELECT episode.id FROM episode INNER JOIN videos ON episode.video = videos.id WHERE videos.filename = $1`;
+    const res = await query(sql, [videoId]);
+    if (res.rows.length > 0) {
+      console.log('Skipping data', f);
     } else {
       const episode = episodeParser(path.basename(f));
       const movie = tnp(path.basename(f));
+      const opensubtitles = await OpenSubtitles.hash(f);
+
+      const id = (await query(`
+        INSERT INTO videos (filename, moviehash) VALUES ($1, $2) ON CONFLICT (filename) DO UPDATE SET filename = EXCLUDED.filename, moviehash = EXCLUDED.moviehash RETURNING id
+      `, [videoId, opensubtitles.moviehash])).rows[0].id;
+
       let showData;
       let episodeData;
       let movieData;
@@ -69,24 +92,24 @@ find.file(regex, source, async (files: string[]) => {
               `tv/${encodeURIComponent(showData.id)}/season/${encodeURIComponent(episode.season)}/episode/${encodeURIComponent(episode.episode || '')}`, {
           });
         } catch (e) {}
-      } else {
-          const tmdbSearch = await tmdb.get('search/movie', {
-            query: movie.title,
-            year: movie.year || '',
-          });
-          movieData = tmdbSearch.results[0];
       }
-      const opensubtitles = await OpenSubtitles.hash(f);
-      const basename = path.basename(f);
-      fs.writeFileSync(jsonPath, JSON.stringify({
-        filename: basename.substr(0, basename.length - 4),
-        opensubtitles,
-        episode,
-        showData,
-        episodeData,
-        movie,
-        movieData,
-      }));
+      if (episode && episodeData) {
+        const showId = (await query(`
+          INSERT INTO show (tmdb_id, name, backdropPath, overview) VALUES ($1, $2, $3, $4) ON CONFLICT (tmdb_id) DO UPDATE SET name = EXCLUDED.name, backdropPath = EXCLUDED.backdropPath, overview = EXCLUDED.overview RETURNING id
+        `, [showData.id, showData.name, showData.backdropPath, showData.overview])).rows[0].id;
+        await query(`
+          INSERT INTO episode (video, show, name, episode, season, stillPath) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (video) DO NOTHING
+        `, [id, showId, episode.name, episode.episode, episode.season, episodeData.stillPath]);
+      } else {
+        const tmdbSearch = await tmdb.get('search/movie', {
+          query: movie.title,
+          year: movie.year ? movie.year : '',
+        });
+        movieData = tmdbSearch.results[0];
+        await query(`
+          INSERT INTO movie (video, title, backdropPath) VALUES ($1, $2, $3) ON CONFLICT (video) DO NOTHING
+        `, [id, movieData.title, movieData.backdropPath]);
+      }
     }
   }
 });
