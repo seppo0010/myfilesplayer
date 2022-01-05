@@ -41,6 +41,7 @@ app.get('/api/progress/:videoId', async (req: Request, res: Response) => {
 
 app.post('/api/progress', async (req: Request, res: Response) => {
   const userId = 1; // single user for now
+  const videoId = await getVideoId(req.body.video);
   await query(`INSERT INTO user_progress
     (user_id, video_id, progress)
     VALUES
@@ -48,9 +49,20 @@ app.post('/api/progress', async (req: Request, res: Response) => {
     ON CONFLICT (user_id, video_id) DO UPDATE SET progress = EXCLUDED.progress
   `, [
     userId,
-    await getVideoId(req.body.video),
+    videoId,
     parseFloat(req.body.progress),
-  ])
+  ]);
+  await query(`DELETE FROM watch_history
+              WHERE user_id = $1 AND video_id = $2 AND date > NOW() - INTERVAL '2' HOUR
+  `, [
+    userId,
+    videoId,
+  ]);
+  await query(`INSERT INTO watch_history (user_id, video_id, date) VALUES ($1, $2, NOW())
+  `, [
+    userId,
+    videoId,
+  ]);
   res.json({});
 });
 
