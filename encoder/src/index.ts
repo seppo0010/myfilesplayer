@@ -16,7 +16,7 @@ dotenv.config()
 
 const getFileContents = (path: string): string => {
   try {
-    return fs.readFileSync('/var/run/secrets/pg_hostname', 'utf-8').trim()
+    return fs.readFileSync(path, 'utf-8').trim()
   } catch (e) {
     return '';
   }
