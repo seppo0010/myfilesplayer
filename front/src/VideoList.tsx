@@ -161,6 +161,12 @@ function VideoList() {
         case 39: // right arrow
           updateSelectedEpisode(e.keyCode - 38);
           break;
+        case 412: // seek backward
+          updateSelectedEpisode(-1);
+          break;
+        case 417: // seek forward
+          updateSelectedEpisode(1);
+          break;
       }
     }
     document.addEventListener('keydown', handleKey);
