@@ -72,7 +72,7 @@ find.file(regex, source, async (files: string[]) => {
       } else {
           const tmdbSearch = await tmdb.get('search/movie', {
             query: movie.title,
-            year: movie.year,
+            year: movie.year || '',
           });
           movieData = tmdbSearch.results[0];
       }
