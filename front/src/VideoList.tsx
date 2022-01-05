@@ -45,7 +45,9 @@ function VideoList() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [moviesOrShow, setMoviesOrShow] = useState<MovieOrShow[]>([]);
   const [selected, setSelected] = useState(0);
+  const [selectedEpisode, setSelectedEpisode] = useState(0);
   const [positionY, setPositionY] = useState(0);
+  const [selectedShowEpisodes, setSelectedShowEpisodes] = useState<Episode[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const listItemsRef = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -68,6 +70,17 @@ function VideoList() {
     })();
   });
 
+  const updateSelectedEpisode = React.useCallback((diff: number) => {
+    const s = Math.min(
+      Math.max(
+        0,
+        selectedEpisode + diff
+      ),
+      selectedShowEpisodes.length - 1
+    );
+    setSelectedEpisode(s);
+  }, [selectedEpisode, selectedShowEpisodes]);
+
   const updateSelected = React.useCallback((diff: number) => {
     const s = Math.min(
       Math.max(
@@ -77,34 +90,50 @@ function VideoList() {
       moviesOrShow.length - 1
     );
     setSelected(s);
+
+    const movieOrShow = moviesOrShow[s];
+    if (movieOrShow.movie) {
+      setSelectedShowEpisodes([]);
+    } else if (movieOrShow.show) {
+      const show = movieOrShow.show;
+      setSelectedShowEpisodes(episodes.filter((e) => e.show === show.id));
+    }
+
     const cur = listItemsRef.current[s];
     const cont = containerRef.current;
     if (cur && cont) {
       setPositionY(- cur.offsetTop);
     }
     return s;
-  }, [selected, moviesOrShow]);
+  }, [selected, moviesOrShow, episodes]);
 
   useEffect(() => {
     if (!moviesOrShow.length) return
     const mousemove = (e: MouseEvent) => {
-        if (!moviesOrShow.length || e.movementY === 0) return;
-        updateSelected(e.movementY > 0 ? 1 : -1);
+        if (moviesOrShow.length && e.movementY !== 0) {
+          updateSelected(e.movementY > 0 ? 1 : -1);
+        }
+        if (selectedShowEpisodes.length && e.movementX !== 0) {
+          updateSelectedEpisode(e.movementX > 0 ? 1 : -1);
+        }
     };
     document.addEventListener('mousemove', mousemove);
     return () => document.removeEventListener('mousemove', mousemove)
-  }, [moviesOrShow, updateSelected]);
+  }, [moviesOrShow, updateSelected, updateSelectedEpisode, selectedShowEpisodes]);
 
   const openSelected = React.useCallback(() => {
     const movieOrShow = moviesOrShow[selected];
+    let id = 0;
     if (movieOrShow.movie) {
-      const id = movieOrShow.movie.video;
-      const video = videos.find((v) => v.id === id)
-      if (video) {
-        navigate(`/play/${encodeURIComponent(video.filename)}`);
-      }
+      id = movieOrShow.movie.video;
+    } else if (movieOrShow.show) {
+      id = selectedShowEpisodes[selectedEpisode].video
     }
-  }, [moviesOrShow, navigate, selected, videos]);
+    const video = videos.find((v) => v.id === id)
+    if (video) {
+      navigate(`/play/${encodeURIComponent(video.filename)}`);
+    }
+  }, [moviesOrShow, navigate, selected, videos, selectedEpisode, selectedShowEpisodes]);
 
   useEffect(() => {
     const click = () => {
@@ -128,11 +157,15 @@ function VideoList() {
         case 40: // down arrow
           updateSelected(e.keyCode - 39);
           break;
+        case 37: // left arrow
+        case 39: // right arrow
+          updateSelectedEpisode(e.keyCode - 38);
+          break;
       }
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [updateSelected, openSelected]);
+  }, [updateSelected, updateSelectedEpisode, openSelected]);
 
   useEffect(() => {
      listItemsRef.current = listItemsRef.current.slice(0, moviesOrShow.length);
@@ -152,8 +185,17 @@ function VideoList() {
                 <img src={`https://image.tmdb.org/t/p/w500${mOrS.movie.backdroppath}`} alt="" />
               </>)}
               {mOrS.show && (<>
-                {mOrS.show.name}
-                <img src={`https://image.tmdb.org/t/p/w500${mOrS.show.backdroppath}`} alt="" />
+                {i === selected && selectedShowEpisodes.length > 0 && selectedShowEpisodes[selectedEpisode] && (<>
+                  {mOrS.show.name}{' '}
+                  {selectedShowEpisodes[selectedEpisode].season}x
+                  {selectedShowEpisodes[selectedEpisode].episode}{' '}
+                  {selectedShowEpisodes[selectedEpisode].name}
+                  <img src={`https://image.tmdb.org/t/p/w500${selectedShowEpisodes[selectedEpisode].stillpath}`} alt="" />
+                </>)}
+                {(i !== selected || selectedShowEpisodes.length === 0) && (<>
+                  {mOrS.show.name}
+                  <img src={`https://image.tmdb.org/t/p/w500${mOrS.show.backdroppath}`} alt="" />
+                </>)}
               </>)}
             </li>
           ))}
