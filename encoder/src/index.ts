@@ -106,9 +106,11 @@ find.file(regex, source, async (files: string[]) => {
           year: movie.year ? movie.year : '',
         });
         movieData = tmdbSearch.results[0];
-        await query(`
-          INSERT INTO movie (video, title, backdropPath) VALUES ($1, $2, $3) ON CONFLICT (video) DO NOTHING
-        `, [id, movieData.title, movieData.backdropPath]);
+        if (movieData) {
+            await query(`
+              INSERT INTO movie (video, title, backdropPath) VALUES ($1, $2, $3) ON CONFLICT (video) DO NOTHING
+            `, [id, movieData.title, movieData.backdropPath]);
+        }
       }
     }
   }
