@@ -56,10 +56,10 @@ app.post('/api/progress', async (req: Request, res: Response) => {
 
 app.get('/api/videos.json', async (req: Request, res: Response) => {
   const [episodes, movies, shows, videos]  = await Promise.all([
-    query(`SELECT * FROM episode`),
-    query(`SELECT * FROM movie`),
-    query(`SELECT * FROM show`),
-    query(`SELECT * FROM videos`),
+    query(`SELECT * FROM episode`, []),
+    query(`SELECT * FROM movie`, []),
+    query(`SELECT * FROM show`, []),
+    query(`SELECT * FROM videos`, []),
   ]);
   res.type('application/json');
   res.json({
