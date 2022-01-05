@@ -67,11 +67,18 @@ app.post('/api/progress', async (req: Request, res: Response) => {
 });
 
 app.get('/api/videos.json', async (req: Request, res: Response) => {
-  const [episodes, movies, shows, videos]  = await Promise.all([
+  const [episodes, movies, shows, videos, watchHistory]  = await Promise.all([
     query(`SELECT * FROM episode`, []),
     query(`SELECT * FROM movie`, []),
     query(`SELECT * FROM show`, []),
     query(`SELECT * FROM videos`, []),
+    query(`
+          SELECT video_id as videoId, show.id AS showId, movie.id AS movieId
+          FROM watch_history
+          LEFT JOIN episode ON episode.video = watch_history.video_id
+          LEFT JOIN show ON episode.show = show.id
+          LEFT JOIN movie ON movie.video = watch_history.video_id
+          ORDER BY date DESC`, []),
   ]);
   res.type('application/json');
   res.json({
@@ -79,6 +86,7 @@ app.get('/api/videos.json', async (req: Request, res: Response) => {
     movies: movies.rows,
     shows: shows.rows,
     videos: videos.rows,
+    watchHistory: watchHistory.rows,
   });
 });
 

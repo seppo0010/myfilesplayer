@@ -110,6 +110,10 @@ find.file(regex, source, async (files: string[]) => {
             await query(`
               INSERT INTO movie (video, title, backdropPath) VALUES ($1, $2, $3) ON CONFLICT (video) DO NOTHING
             `, [id, movieData.title, movieData.backdropPath]);
+        } else {
+            await query(`
+              INSERT INTO movie (video, title, backdropPath) VALUES ($1, $2, $3) ON CONFLICT (video) DO NOTHING
+            `, [id, movie.title, ""]);
         }
       }
     }

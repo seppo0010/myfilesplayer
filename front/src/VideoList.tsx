@@ -59,11 +59,22 @@ function VideoList() {
         const data = await res.json();
         setEpisodes(data.episodes);
         setVideos(data.videos);
+        const movieOrShowIndex = (mOrS: MovieOrShow) => {
+          let index;
+          if (mOrS.movie) {
+            index = data.watchHistory.findIndex((wh: any) => wh.movieid === mOrS.movie?.id)
+          }
+          if (mOrS.show) {
+            index = data.watchHistory.findIndex((wh: any) => wh.showid === mOrS.show?.id)
+          }
+          return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+        }
         setMoviesOrShow(data.movies
           .map((movie: Movie) => ({ movie }))
           .concat(data.shows
             .map((show: Show) => ({ show }))
           )
+          .sort((f: MovieOrShow, l: MovieOrShow) => movieOrShowIndex(f) - movieOrShowIndex(l))
         );
         setLoadedVideos(true);
         setLoading(false);
@@ -188,7 +199,7 @@ function VideoList() {
             <li key={mOrS.movie?.id + ',' + mOrS.show?.id} style={i === selected ? {color: 'red'} : {}} ref={(el) => listItemsRef.current[i] = el}>
               {mOrS.movie && (<>
                 {mOrS.movie.title}
-                <img src={`https://image.tmdb.org/t/p/w500${mOrS.movie.backdroppath}`} alt="" />
+                {mOrS.movie.backdroppath && <img src={`https://image.tmdb.org/t/p/w500${mOrS.movie.backdroppath}`} alt="" />}
               </>)}
               {mOrS.show && (<>
                 {i === selected && selectedShowEpisodes.length > 0 && selectedShowEpisodes[selectedEpisode] && (<>
@@ -196,7 +207,7 @@ function VideoList() {
                   {selectedShowEpisodes[selectedEpisode].season}x
                   {selectedShowEpisodes[selectedEpisode].episode}{' '}
                   {selectedShowEpisodes[selectedEpisode].name}
-                  <img src={`https://image.tmdb.org/t/p/w500${selectedShowEpisodes[selectedEpisode].stillpath}`} alt="" />
+                  {selectedShowEpisodes[selectedEpisode].stillpath && <img src={`https://image.tmdb.org/t/p/w500${selectedShowEpisodes[selectedEpisode].stillpath}`} alt="" />}
                 </>)}
                 {(i !== selected || selectedShowEpisodes.length === 0) && (<>
                   {mOrS.show.name}
