@@ -68,9 +68,9 @@ app.post('/api/progress', async (req: Request, res: Response) => {
 
 app.get('/api/videos.json', async (req: Request, res: Response) => {
   const [episodes, movies, shows, videos, watchHistory]  = await Promise.all([
-    query(`SELECT * FROM episode`, []),
-    query(`SELECT * FROM movie`, []),
-    query(`SELECT * FROM show`, []),
+    query(`SELECT * FROM episode WHERE hidden = 0`, []),
+    query(`SELECT * FROM movie WHERE hidden = 0`, []),
+    query(`SELECT * FROM show WHERE hidden = 0`, []),
     query(`SELECT * FROM videos`, []),
     query(`
           SELECT video_id as videoId, show.id AS showId, movie.id AS movieId
