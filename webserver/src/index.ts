@@ -92,15 +92,17 @@ app.get('/api/videos.json', async (req: Request, res: Response) => {
 
 app.use('/videos', express.static(videosPath));
 app.get('/api/subtitles/:video', async (req: Request, res: Response) => {
-  const fileData = JSON.parse(await fs.promises.readFile(path.join(
-    videosPath,
-    `${req.params.video}.json`
-  ), 'utf-8'));
+  const queryData = await query(`
+    SELECT moviehash, name, episode, season FROM videos
+    LEFT JOIN episode ON videos.id = episode.video
+    WHERE videos.filename = $1`,
+    [req.params.video]
+  );
   const data = await os.subtitles({
-    moviehash: fileData.opensubtitles.moviehash,
-    query: fileData.episode.show,
-    season_number: fileData.episode.season,
-    episode_number: fileData.episode.episode,
+    moviehash: queryData.rows[0].moviehash,
+    query: queryData.rows[0].name,
+    season_number: queryData.rows[0].season,
+    episode_number: queryData.rows[0].episode,
   })
   res.json(data);
 });
