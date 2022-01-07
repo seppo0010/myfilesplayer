@@ -164,7 +164,7 @@ function VideoList() {
       e.preventDefault();
       switch(e.keyCode) {
         case 32: // spacebar
-        case 407: // color
+        case 406: // blue
           setMouseEnabled(!mouseEnabled) 
           break
         case 13: // enter
