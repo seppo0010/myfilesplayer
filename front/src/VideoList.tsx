@@ -50,6 +50,7 @@ function VideoList() {
   const [selectedShowEpisodes, setSelectedShowEpisodes] = useState<Episode[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const listItemsRef = useRef<(HTMLLIElement | null)[]>([]);
+  const [mouseEnabled, setMouseEnabled] = useState(true)
 
   useEffect(() => {
     if (loading || loadedVideos) return;
@@ -121,16 +122,17 @@ function VideoList() {
   useEffect(() => {
     if (!moviesOrShow.length) return
     const mousemove = (e: MouseEvent) => {
-        if (moviesOrShow.length && e.movementY !== 0) {
-          updateSelected(e.movementY > 0 ? 1 : -1);
-        }
-        if (selectedShowEpisodes.length && e.movementX !== 0) {
-          updateSelectedEpisode(e.movementX > 0 ? 1 : -1);
-        }
+      if (!mouseEnabled) return
+      if (moviesOrShow.length && e.movementY !== 0) {
+        updateSelected(e.movementY > 0 ? 1 : -1);
+      }
+      if (selectedShowEpisodes.length && e.movementX !== 0) {
+        updateSelectedEpisode(e.movementX > 0 ? 1 : -1);
+      }
     };
     document.addEventListener('mousemove', mousemove);
     return () => document.removeEventListener('mousemove', mousemove)
-  }, [moviesOrShow, updateSelected, updateSelectedEpisode, selectedShowEpisodes]);
+  }, [moviesOrShow, updateSelected, updateSelectedEpisode, selectedShowEpisodes, mouseEnabled]);
 
   const openSelected = React.useCallback(() => {
     const movieOrShow = moviesOrShow[selected];
@@ -161,6 +163,10 @@ function VideoList() {
     const handleKey = (e: KeyboardEvent) => {
       e.preventDefault();
       switch(e.keyCode) {
+        case 32: // spacebar
+        case 407: // color
+          setMouseEnabled(!mouseEnabled) 
+          break
         case 13: // enter
           openSelected();
           break;
@@ -182,7 +188,7 @@ function VideoList() {
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [updateSelected, updateSelectedEpisode, openSelected]);
+  }, [updateSelected, updateSelectedEpisode, openSelected, mouseEnabled]);
 
   useEffect(() => {
      listItemsRef.current = listItemsRef.current.slice(0, moviesOrShow.length);
