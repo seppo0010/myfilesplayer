@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
+var fromEntries = require('object.fromentries');
 
 interface Video {
   id: number
@@ -77,7 +78,7 @@ function VideoList() {
           )
           .sort((f: MovieOrShow, l: MovieOrShow) => movieOrShowIndex(f) - movieOrShowIndex(l))
         setMoviesOrShow(mOrSs);
-        setSelectedEpisode(Object.fromEntries(mOrSs.map(({ show }: { show: Show }, i: number) => {
+        setSelectedEpisode(fromEntries(mOrSs.map(({ show }: { show: Show }, i: number) => {
           if (!show) return [[i], 0]
           const wh: any = data.watchHistory.find((wh: any) => wh.showid === show.id)
           if (!wh) return [[i], 0]
