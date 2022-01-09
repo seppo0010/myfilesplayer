@@ -75,8 +75,22 @@ find.file(regex, source, async (files: string[]) => {
     if (res.rows.length > 0) {
       console.log('Skipping data', f);
     } else {
-      const episode = episodeParser(path.basename(f));
-      const movie = tnp(path.basename(f));
+      let episode;
+      const episodeJSON = path.join(target, videoId + '.episode.json')
+      if (fs.existsSync(episodeJSON)) {
+        episode = JSON.parse(getFileContents(episodeJSON));
+      } else {
+        episode = episodeParser(path.basename(f));
+        fs.writeFileSync(episodeJSON, JSON.stringify(episode));
+      }
+      let movie;
+      const movieJSON = path.join(target, videoId + '.movie.json')
+      if (fs.existsSync(movieJSON)) {
+        movie = JSON.parse(getFileContents(movieJSON));
+      } else {
+        movie = tnp(path.basename(f));
+        fs.writeFileSync(movieJSON, JSON.stringify(movie));
+      }
       const opensubtitles = await OpenSubtitles.hash(f);
 
       const id = (await query(`
@@ -104,7 +118,7 @@ find.file(regex, source, async (files: string[]) => {
         await query(`
           INSERT INTO episode (video, show, name, episode, season, stillPath) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (video) DO NOTHING
         `, [id, showId, episode.name, episode.episode, episode.season, episodeData.stillPath]);
-      } else {
+      } else if (movie) {
         const tmdbSearch = await tmdb.get('search/movie', {
           query: movie.title,
           year: movie.year ? movie.year : '',
