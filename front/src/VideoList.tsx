@@ -77,7 +77,16 @@ function VideoList() {
           )
           .sort((f: MovieOrShow, l: MovieOrShow) => movieOrShowIndex(f) - movieOrShowIndex(l))
         setMoviesOrShow(mOrSs);
-        setSelectedEpisode(Object.fromEntries(mOrSs.map((_: any, i: number) => [i, 0])));
+        setSelectedEpisode(Object.fromEntries(mOrSs.map(({ show }: { show: Show }, i: number) => {
+          if (!show) return [[i], 0]
+          const wh: any = data.watchHistory.find((wh: any) => wh.showid === show.id)
+          if (!wh) return [[i], 0]
+          const { videoid } = wh
+          const episodes = data.episodes.filter((ep: Episode) => ep.show === wh.showid);
+          if (!episodes) return [[i], 0]
+          const index = episodes.findIndex((ep: Episode) => ep.video === videoid);
+          return [[i], index === -1 ? 0 : index]
+        })));
         setLoadedVideos(true);
         setLoading(false);
     })();
