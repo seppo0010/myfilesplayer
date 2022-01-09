@@ -69,6 +69,14 @@ find.file(regex, source, async (files: string[]) => {
       }
     }
 
+    let duration = -1;
+    try {
+        const sh = execa('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', mp4Path]);
+        sh.stderr?.pipe(process.stderr);
+        const res = await sh
+        duration = parseFloat(res.stdout);
+    } catch (e) {}
+
     const videoId = path.basename(f.replace(regex, ''));
     const sql = `SELECT episode.id FROM episode INNER JOIN videos ON episode.video = videos.id WHERE videos.filename = $1`;
     const res = await query(sql, [videoId]);
@@ -94,8 +102,8 @@ find.file(regex, source, async (files: string[]) => {
       const opensubtitles = await OpenSubtitles.hash(f);
 
       const id = (await query(`
-        INSERT INTO videos (filename, moviehash) VALUES ($1, $2) ON CONFLICT (filename) DO UPDATE SET filename = EXCLUDED.filename, moviehash = EXCLUDED.moviehash RETURNING id
-      `, [videoId, opensubtitles.moviehash])).rows[0].id;
+        INSERT INTO videos (filename, moviehash, duration) VALUES ($1, $2, $3) ON CONFLICT (filename) DO UPDATE SET filename = EXCLUDED.filename, moviehash = EXCLUDED.moviehash, duration = EXCLUDED.duration RETURNING id
+      `, [videoId, opensubtitles.moviehash, duration])).rows[0].id;
 
       let showData;
       let episodeData;

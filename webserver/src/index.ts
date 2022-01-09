@@ -73,11 +73,12 @@ app.get('/api/videos.json', async (req: Request, res: Response) => {
     query(`SELECT * FROM show WHERE hidden = 0`, []),
     query(`SELECT * FROM videos`, []),
     query(`
-          SELECT video_id as videoId, show.id AS showId, movie.id AS movieId
+          SELECT watch_history.video_id as videoId, show.id AS showId, movie.id AS movieId, user_progress.progress
           FROM watch_history
           LEFT JOIN episode ON episode.video = watch_history.video_id
           LEFT JOIN show ON episode.show = show.id
           LEFT JOIN movie ON movie.video = watch_history.video_id
+          LEFT JOIN user_progress ON watch_history.video_id = user_progress.video_id AND watch_history.user_id = user_progress.user_id
           ORDER BY date DESC`, []),
   ]);
   res.type('application/json');
