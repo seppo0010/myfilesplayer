@@ -83,23 +83,23 @@ function VideoList() {
   });
 
   const updateSelectedEpisode = React.useCallback((diff: number) => {
-    const s = Math.min(
-      Math.max(
-        0,
-        selectedEpisode + diff
-      ),
-      selectedShowEpisodes.length - 1
+    const s = Math.max(
+      0,
+      Math.min(
+        selectedEpisode + diff,
+        selectedShowEpisodes.length - 1
+      )
     );
     setSelectedEpisode(s);
   }, [selectedEpisode, selectedShowEpisodes]);
 
   const updateSelected = React.useCallback((diff: number) => {
-    const s = Math.min(
-      Math.max(
-        0,
-        selected + diff
+    const s = Math.max(
+      0,
+      Math.min(
+        selected + diff,
+        moviesOrShow.length - 1
       ),
-      moviesOrShow.length - 1
     );
     setSelected(s);
 
@@ -118,6 +118,14 @@ function VideoList() {
     }
     return s;
   }, [selected, moviesOrShow, episodes]);
+
+  const [episodeInitialized, setEpisodeInitialized] = useState(false);
+  useEffect(() => {
+    if (!episodeInitialized && moviesOrShow.length > 0) {
+      setEpisodeInitialized(true);
+      updateSelected(0);
+    }
+  }, [setEpisodeInitialized, episodeInitialized, moviesOrShow.length, updateSelected]);
 
   useEffect(() => {
     if (!moviesOrShow.length) return
