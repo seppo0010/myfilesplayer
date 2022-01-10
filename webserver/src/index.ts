@@ -94,18 +94,27 @@ app.get('/api/videos.json', async (req: Request, res: Response) => {
 app.use('/videos', express.static(videosPath));
 app.get('/api/subtitles/:video', async (req: Request, res: Response) => {
   const queryData = await query(`
-    SELECT moviehash, name, episode, season FROM videos
+    SELECT moviehash, name, episode, season, title FROM videos
     LEFT JOIN episode ON videos.id = episode.video
+    LEFT JOIN movie ON videos.id = movie.video
     WHERE videos.filename = $1`,
     [req.params.video]
   );
-  const data = await os.subtitles({
-    moviehash: queryData.rows[0].moviehash,
-    query: queryData.rows[0].name,
-    season_number: queryData.rows[0].season,
-    episode_number: queryData.rows[0].episode,
-  })
-  res.json(data);
+  if (queryData.rows[0].name) {
+    const data = await os.subtitles({
+      moviehash: queryData.rows[0].moviehash,
+      query: queryData.rows[0].name,
+      season_number: queryData.rows[0].season,
+      episode_number: queryData.rows[0].episode,
+    })
+    res.json(data);
+  } else {
+    const data = await os.subtitles({
+      moviehash: queryData.rows[0].moviehash,
+      query: queryData.rows[0].title,
+    })
+    res.json(data);
+  }
 });
 app.get('/api/subtitle/:file_id', async (req: Request, res: Response) => {
   const data = await os.download({
