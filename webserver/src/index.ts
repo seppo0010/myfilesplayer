@@ -94,8 +94,9 @@ app.get('/api/videos.json', async (req: Request, res: Response) => {
 app.use('/videos', express.static(videosPath));
 app.get('/api/subtitles/:video', async (req: Request, res: Response) => {
   const queryData = await query(`
-    SELECT moviehash, name, episode, season, title FROM videos
+    SELECT moviehash, show.name, episode, season, title FROM videos
     LEFT JOIN episode ON videos.id = episode.video
+    LEFT JOIN show ON show.id = episode.show
     LEFT JOIN movie ON videos.id = movie.video
     WHERE videos.filename = $1`,
     [req.params.video]
